@@ -58,8 +58,8 @@ CREATE TABLE public.songplays(
     start_time TIMESTAMP NOT NULL ENCODE RAW,
     user_id VARCHAR NOT NULL ENCODE RAW DISTKEY,
     level VARCHAR ENCODE ZSTD,
-    song_id VARCHAR ENCODE ZSTD,
-    artist_id VARCHAR ENCODE ZSTD,
+    song_id VARCHAR NOT NULL ENCODE ZSTD,
+    artist_id VARCHAR NOT NULL ENCODE ZSTD,
     session_id VARCHAR ENCODE ZSTD,
     location VARCHAR ENCODE ZSTD,
     user_agent VARCHAR ENCODE ZSTD
@@ -82,7 +82,7 @@ song_table_create = ("""
 CREATE TABLE public.songs (
     song_id VARCHAR PRIMARY KEY ENCODE ZSTD,
     title VARCHAR NOT NULL ENCODE RAW,
-    artist_id VARCHAR DISTKEY ENCODE RAW,
+    artist_id VARCHAR NOT NULL DISTKEY ENCODE RAW,
     year INT4 ENCODE ZSTD,
     duration FLOAT8 ENCODE ZSTD
 )
@@ -149,6 +149,8 @@ AND e.artist_id = s.artist_id
 WHERE page = 'NextSong';
 """)
 
+# using the window function here in the CTE
+# enables us to filter and pick only the latest of the duplicate user entries
 user_table_insert = ("""
 INSERT INTO public.users(user_id, first_name, last_name, gender, level)
 WITH unique_user AS (
